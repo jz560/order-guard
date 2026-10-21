@@ -29,6 +29,7 @@ services:
       BACKEND_DB_USER: backend_app
       BACKEND_DB_PASSWORD: ${BACKEND_DB_PASSWORD:?缺少应用数据库密码}
       MODEL_MODE: ${MODEL_MODE:-stub}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       BACKEND_PORT: "8080"
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"

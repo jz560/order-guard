@@ -2,7 +2,7 @@
 
 面向订单运营人员的个人演示项目。第一版只处理“支付成功但订单仍待支付”。模型提出建议，审批后的 Java 服务执行并验证结果。订单、支付和回调均为模拟数据，不接入真实资金。
 
-当前实现 **T01 工程基础**：两个 Spring Boot 服务、独立数据库与账号、Flyway、默认模型替身，以及 Vue 环境状态页。诊断、业务工具、任务、审批、订单修复和演示场景尚未实现。验收记录见 [T01](docs/tasks/T01.md)。
+当前包含 **T01 工程基础**和 **T02 模型接入实验**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页，以及 DeepSeek 只读工具循环实验。任务、审批、订单修复和完整业务场景尚未实现。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)。
 
 ## 环境
 
@@ -11,7 +11,7 @@
 - Docker Engine / Docker Desktop，切换到 Linux 容器。集成测试需要可用 Docker。
 - 首次构建需要访问 Maven Central、npm 和 Docker Hub。
 - 无需全局 Maven，仓库提供 Maven Wrapper 3.9.11，附分发包 SHA-256 校验。
-- 默认 `MODEL_MODE=stub`，不需要模型密钥，不发送模型网络请求。T01 对其他模式拒绝启动，真实接入属于 T02。
+- 默认 `MODEL_MODE=stub`，不需要模型密钥，不发送模型网络请求。`MODEL_MODE=deepseek` 时需要 `DEEPSEEK_API_KEY`；服务启动本身不发起模型请求。
 
 ## 启动与停止
 
@@ -84,6 +84,27 @@ npm run build
 JDBC URL 示例：`jdbc:postgresql://localhost:15432/agent_app` 和 `jdbc:postgresql://localhost:15432/agent_simulator`。密码取自本机 `.env`；Spring Boot 不会自行读取此文件。默认数据库账号分别是 `backend_app` 和 `simulator_app`。
 
 ## 工程结构与边界
+
+### T02 模型接入实验
+
+此实验由命令行显式启动，不开放未认证的诊断 API。四个工具只读取固定模拟订单 `T02-ORDER-001` 的订单、支付、回调和历史记录；不访问模拟服务数据库，不产生业务写操作。
+
+```powershell
+# 无密钥、无模型费用：脚本替身完成两轮工具往返，验证运行入口
+./scripts/t02-probe.ps1 -Mode stub
+
+# 真实调用：先在本机 .env 配置 DEEPSEEK_API_KEY，或通过进程环境变量注入
+# 每次实验最多 4 次模型请求、12 次工具调用、每次最多输出 1000 token，不自动重试
+$env:T02_ALLOW_LIVE='true'
+./scripts/t02-probe.ps1 -Mode deepseek
+Remove-Item Env:T02_ALLOW_LIVE
+```
+
+真实适配器固定连接 DeepSeek 官方地址，模型为 `deepseek-flash`、非思考模式。凭证不传入前端。`.env` 只由实验脚本读取指定密钥；IDE 启动服务仍需环境变量。实验运行记录逐条写入忽略目录 `.cache/t02-runs/<runId>.jsonl`，包括模型轮次、工具意图与结果、用量、耗时和停止原因。记录不包含认证头、密钥或模型内部推理。
+
+结构化输出只验证建议类型、字段与证据引用；不表示建议在业务上必然正确，也不创建审批或可执行方案。默认单次模型时限 30 秒、总时限 120 秒；超时后停止后续调用，但远端可能已经计费，用量视为未知。T02 不包含进程恢复或持久化任务循环，这些属于 T11。
+
+### 目录
 
 ```text
 backend/         业务服务基础、模型调用接口与替身
