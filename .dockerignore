@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+.tools
+.cache
+**/target
+**/node_modules
+frontend
+文档

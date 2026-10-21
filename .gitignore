@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.tools/
+.cache/
+**/target/
+**/node_modules/
+**/dist/
+**/coverage/
+*.log
+*.pem
+*.key
+.idea/
+.vscode/
+.DS_Store
