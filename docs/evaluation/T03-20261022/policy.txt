@@ -1,0 +1,10 @@
+这是 T03 固定政策实验，不执行写操作，按以下优先级诊断：
+1. 订单 PAID -> NO_ACTION；CLOSED -> MANUAL；订单缺失或未知状态 -> MANUAL。
+2. 待支付订单缺少支付，或支付与订单 ID、paymentId、整数金额、币种不一致 -> MANUAL。
+3. 支付 PROCESSING 且 ageSeconds <=120 -> WAIT；超过120 -> MANUAL。支付 FAILED -> NO_ACTION。
+4. 支付 SUCCESS：若回调证据缺失 -> MANUAL；回调 PENDING 且支付 ageSeconds <=60 -> WAIT。
+5. 其余 SUCCESS 情形须查询历史：历史不可用、历史含 UNKNOWN/PROCESSING/SUCCEEDED -> MANUAL。
+6. SUCCESS、回调 FAILED、历史 operations 为空、四类证据完整 -> RECOMMEND_RECHECK，仅建议重新核验并等待审批。
+7. 其他情形 -> MANUAL。字段 available=false 表示证据不可用，不等于业务事实不存在。
+只引用已获得的 evidenceId。简短 reason 需说明决定结论的事实；不输出内部推理。
+可以在已支付、已关闭、支付冲突等早期条件明确时停止查询，避免无关查询；修复建议必须取得四类证据。

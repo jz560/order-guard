@@ -1,0 +1,1 @@
+{"roundsPerAgent":4,"maxOutputTokens":1000,"requestLimit":60,"automaticRetries":0,"createdAt":"2026-10-22T13:26:20.757132800Z","version":"t03-v1","datasetSHA256":"dbbee5c8d71a6249efd7c605ad0ec7933d4f35b92041001955cfe16a40efaeb9","model":"deepseek-flash","mode":"deepseek","policySHA256":"cc23bdcd165126bcf7d5f5e224734ba58ac149ab62de0365731f353f4ec9a50f"}

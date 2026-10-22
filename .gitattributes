@@ -3,3 +3,6 @@
 mvnw text eol=lf
 *.cmd text eol=crlf
 *.png binary
+backend/src/main/resources/evaluation/*.json text eol=lf
+docs/evaluation/**/cases.json text eol=lf
+docs/evaluation/**/policy.txt text eol=lf

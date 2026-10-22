@@ -7,7 +7,7 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import tools.jackson.databind.json.JsonMapper;
 
 /** T02 固定只读夹具；不连接业务数据库，不具备写凭证。 */
-public final class ProbeTools {
+public final class ProbeTools implements ProbeEvidenceSource {
   public static final String ORDER_ID = "T02-ORDER-001";
   private static final JsonMapper JSON =
       JsonMapper.builder()
@@ -45,6 +45,14 @@ public final class ProbeTools {
                       }
                     })
         .toList();
+  }
+
+  public String orderId() {
+    return ORDER_ID;
+  }
+
+  public String source() {
+    return "T02_FIXTURE";
   }
 
   public String execute(String name, String arguments, String boundOrderId) {
