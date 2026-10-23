@@ -1,0 +1,10 @@
+{
+  "effectCount" : 0,
+  "operationRows" : 0,
+  "operationId" : "4fc9fbe2-7227-44f0-90bd-d3bf815582ca",
+  "orderStatus" : "PENDING_PAYMENT",
+  "httpStatus" : 500,
+  "scenario" : "atomic-rollback",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:41.838991700Z"
+}

@@ -1,0 +1,10 @@
+{
+  "callerStatus" : "UNKNOWN",
+  "operationStatus" : "SUCCEEDED",
+  "operationId" : "92edcaab-2555-4e4d-b8bf-c747f23315da",
+  "code" : "BUSINESS_VERIFICATION_FAILED",
+  "newWriteRequests" : 0,
+  "scenario" : "business-verification-mismatch",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:28:45.157376400Z"
+}

@@ -1,0 +1,13 @@
+{
+  "writesBeforeRecovery" : 1,
+  "beforeRecovery" : "UNKNOWN",
+  "operationId" : "1470c313-7733-4c59-9fe4-b907d5a87546",
+  "afterRecovery" : "SUCCEEDED",
+  "recoveryLog" : "T04_RESULT {\"status\":\"SUCCEEDED\",\"operationId\":\"1470c313-7733-4c59-9fe4-b907d5a87546\",\"code\":\"VERIFIED\"}\n",
+  "effectCount" : 1,
+  "writesAfterRecovery" : 1,
+  "sendLog" : "T04_RESULT {\"code\":\"TRANSPORT_RESULT_UNKNOWN\",\"operationId\":\"1470c313-7733-4c59-9fe4-b907d5a87546\",\"status\":\"UNKNOWN\"}\n",
+  "scenario" : "lost-response",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:02.592338100Z"
+}

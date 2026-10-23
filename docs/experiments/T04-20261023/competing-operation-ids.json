@@ -1,0 +1,8 @@
+{
+  "statuses" : [ 200, 422 ],
+  "orderId" : "b99adf78-7958-495a-b353-11b2c5b13643",
+  "effectCount" : 1,
+  "scenario" : "competing-operation-ids",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:45.250925Z"
+}

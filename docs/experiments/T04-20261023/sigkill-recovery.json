@@ -1,0 +1,14 @@
+{
+  "beforeRecovery" : "IN_FLIGHT",
+  "exitCode" : 137,
+  "effectCount" : 1,
+  "afterRecovery" : "SUCCEEDED",
+  "checkpoint" : "AFTER_RESPONSE_BEFORE_SAVE",
+  "signal" : "SIGKILL",
+  "operationId" : "177d0dba-b069-44c8-985e-cd17cea25293",
+  "recoveryLog" : "T04_RESULT {\"status\":\"SUCCEEDED\",\"operationId\":\"177d0dba-b069-44c8-985e-cd17cea25293\",\"code\":\"VERIFIED\"}\n",
+  "writeRequests" : 1,
+  "scenario" : "sigkill-recovery",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:38.666376500Z"
+}

@@ -1,0 +1,11 @@
+{
+  "readCredentialCannotWrite" : true,
+  "orderVersion" : 2,
+  "effectCount" : 1,
+  "operationId" : "b7c81094-3b5a-4ccc-9390-3c28a5c8eeb4",
+  "parameterConflictHttp" : 409,
+  "concurrentRequests" : 8,
+  "scenario" : "concurrent-replay",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:05.929246700Z"
+}

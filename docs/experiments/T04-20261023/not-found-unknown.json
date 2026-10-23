@@ -1,0 +1,10 @@
+{
+  "writeRequests" : 0,
+  "effectCount" : 0,
+  "operationId" : "738abc8a-ae83-44d2-892e-8a366e00ca3d",
+  "status" : "UNKNOWN",
+  "orderReservationRetained" : true,
+  "scenario" : "not-found-unknown",
+  "javaImage" : "order-agent-backend:0.1.0",
+  "verifiedAt" : "2026-10-23T14:29:22.107361500Z"
+}
