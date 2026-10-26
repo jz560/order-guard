@@ -2,7 +2,7 @@
 
 面向订单运营人员的个人演示项目。第一版只处理“支付成功但订单仍待支付”。模型提出建议，审批后的 Java 服务执行并验证结果。订单、支付和回调均为模拟数据，不接入真实资金。
 
-当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**和 **T04 幂等与真实进程恢复实验**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照，以及隔离的 HTTP 写操作恢复验证。正式任务、审批和完整业务场景尚未实现。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)。
+当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**和 **T05 业务模拟场景**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、隔离的 HTTP 写操作恢复验证，以及六种可重置的业务模拟场景。正式任务和审批尚未实现。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)。
 
 ## 环境
 
@@ -26,7 +26,7 @@ Invoke-RestMethod http://localhost:8080/actuator/health
 Invoke-RestMethod http://localhost:8081/actuator/health
 ```
 
-两个健康接口都应返回 `status: UP`，数据库不可用时不会报告健康。当前仅开放健康检查，业务及其他管理路径默认拒绝访问；预置业务账号在 T06 实现。
+两个健康接口都应返回 `status: UP`，数据库不可用时不会报告健康。健康检查匿名可读；模拟业务接口须使用读/执行/演示管理三类凭证，其他管理路径拒绝访问。已有 `.env` 请按 `.env.example` 补充 T05 的 `SIMULATOR_*_TOKEN`，缺省为空时拒绝业务访问。预置业务用户账号在 T06 实现。
 
 本机 5432 端口不可绑定时，将 `.env` 的 `POSTGRES_PORT` 改为 `15432`，再执行启动命令。后端和模拟服务默认端口分别为 8080、8081，可通过 `.env` 的 `BACKEND_PORT`、`SIMULATOR_PORT` 修改。对外端口只绑定回环地址。
 
@@ -115,7 +115,22 @@ Remove-Item Env:T02_ALLOW_LIVE
 
 默认运行镜像为 `eclipse-temurin:21.0.8_9-jdk-jammy`。可用 `T04_JAVA_IMAGE` 指定已有的 Java 21 JDK 运行镜像，例如本机 T01 的 `order-agent-backend:0.1.0`；测试始终复制本轮新 JAR、覆盖入口运行，不复用镜像里的旧代码。实验记录目录由脚本输出，原始测试报告在 `simulator/target/failsafe-reports/`。详细场景与保存的实测证据见 [T04](docs/tasks/T04.md)。
 
-实验入口仅允许显式的 `T04_MODE=demo/test`，采用临时读写分离凭证与各服务独立数据库账号。使用专用 `t04_probe` schema，不改变普通服务的安全配置、默认迁移或现有数据。当前没有对外提供正式修复接口，完整业务模拟及审批分别在 T05、T08 实现。
+实验入口仅允许显式的 `T04_MODE=demo/test`，采用临时读写分离凭证与各服务独立数据库账号。使用专用 `t04_probe` schema，不改变普通服务的安全配置、默认迁移或现有数据。T05 的常驻修复接口独立于此实验；上游审批在 T08 实现。
+
+### T05 业务模拟场景
+
+模拟服务提供订单、支付、回调查询，以及按操作 ID 幂等的受控修复与结果查询。demo/test 首次启动预置回调失败、正常延迟、金额冲突、证据缺失、已修复、订单关闭六种场景。普通启动保留数据；管理接口可重置某个场景，新建订单并保留旧操作，避免旧请求作用于新一轮场景。
+
+`SIMULATOR_READ_TOKEN` 仅允许读取；`SIMULATOR_EXECUTE_TOKEN` 用于可信执行端；`SIMULATOR_ADMIN_TOKEN` 仅管理演示场景。三个值至少 16 字符且不能相同，均为空时健康检查仍可启动。Compose 的 `SIMULATOR_PROFILE=demo` 默认启用演示；非 demo/test 禁用管理和故障（包括历史残留故障）。此接口不代替后续上游审批检查。
+
+故障支持一次提交后响应延迟和操作结果查询不可用。完整请求、错误语义和 PowerShell 演示见 [模拟接口说明](docs/api/simulator.md)，设计取舍见 [T05 决策](docs/decisions/005-t05-business-simulator.md)。正常延迟是证据快照，不运行自动回调调度。所有资金数据均为模拟。
+
+```powershell
+# 真实 PostgreSQL + HTTP 验证 T05，同时执行模拟服务单元测试
+./mvnw.cmd -B -ntp -pl simulator '-Dit.test=BusinessSimulationIT,FoundationIT' verify
+# 完整项目与 T04 回归仍从根目录执行
+./mvnw.cmd -B -ntp verify
+```
 
 ### 目录
 
@@ -125,7 +140,7 @@ T03 比较同一批 12 个案例上的规则、单次模型和按需查询 Agent
 
 ```text
 backend/         业务服务基础、模型调用接口与替身
-simulator/       独立模拟服务基础
+simulator/       独立模拟服务、业务场景及受控修复
 frontend/        Vue + TypeScript 环境状态页
 infra/           数据库初始化、容器健康探针
 scripts/         统一验证入口
@@ -134,7 +149,7 @@ docs/decisions/  设计决策
 文档/            原始需求、设计、图示和开发规范
 ```
 
-两套数据库角色没有超级用户、建库、建角色权限；数据库及 public schema 撤销 PUBLIC 默认访问权限。各服务仅获得自身数据库凭证，模拟数据未来通过 HTTP 获取。Flyway V1 仅创建服务归属标记，业务表随对应任务逐步增加。已经执行的迁移不得原地修改。
+两套数据库角色没有超级用户、建库、建角色权限；数据库及 public schema 撤销 PUBLIC 默认访问权限。各服务仅获得自身数据库凭证，模拟数据通过 HTTP 获取。Flyway V1 创建服务归属标记，模拟服务 V2 创建业务表。已经执行的迁移不得原地修改。
 
 第一版金额使用整数最小货币单位，不支持多币种业务、部分支付、退款或撤销支付；当前场景的支付成功事实不逆转。未来真实支付系统接入需重新设计事实核验协议。
 

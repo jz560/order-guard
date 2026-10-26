@@ -1,4 +1,8 @@
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
   application:
     name: order-agent-simulator
   profiles:
@@ -33,3 +37,12 @@ management:
       show-details: never
       probes:
         enabled: true
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    arg-name-based-constructor-auto-mapping: true
+simulator:
+  auth:
+    read-token: ${SIMULATOR_READ_TOKEN:}
+    execute-token: ${SIMULATOR_EXECUTE_TOKEN:}
+    admin-token: ${SIMULATOR_ADMIN_TOKEN:}
