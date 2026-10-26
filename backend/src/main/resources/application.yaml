@@ -1,4 +1,8 @@
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
   application:
     name: order-agent-backend
   profiles:
@@ -34,5 +38,20 @@ management:
       probes:
         enabled: true
 agent:
+  accounts:
+    operator:
+      password: ${DEMO_OPERATOR_PASSWORD:}
+      order-prefix: ${DEMO_OPERATOR_ORDER_PREFIX:T05-ORDER-}
+    approver:
+      password: ${DEMO_APPROVER_PASSWORD:}
+      order-prefix: ${DEMO_APPROVER_ORDER_PREFIX:T05-ORDER-}
+  simulator:
+    base-url: ${SIMULATOR_BASE_URL:http://localhost:8081}
+    read-token: ${SIMULATOR_READ_TOKEN:}
   model:
     mode: ${MODEL_MODE:stub}
+mybatis:
+  type-handlers-package: com.example.orderagent.backend.task
+  configuration:
+    map-underscore-to-camel-case: true
+    arg-name-based-constructor-auto-mapping: true

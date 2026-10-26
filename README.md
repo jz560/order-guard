@@ -2,7 +2,7 @@
 
 面向订单运营人员的个人演示项目。第一版只处理“支付成功但订单仍待支付”。模型提出建议，审批后的 Java 服务执行并验证结果。订单、支付和回调均为模拟数据，不接入真实资金。
 
-当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**和 **T05 业务模拟场景**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、隔离的 HTTP 写操作恢复验证，以及六种可重置的业务模拟场景。正式任务和审批尚未实现。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)。
+当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**、**T05 业务模拟场景**和 **T06 任务创建与查询**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、六种业务场景，以及带权限、订单限制、证据快照和审计的任务 API。任务尚未自动推进，审批与任务前端页面尚未实现。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)、[T06](docs/tasks/T06.md)。
 
 ## 环境
 
@@ -26,7 +26,7 @@ Invoke-RestMethod http://localhost:8080/actuator/health
 Invoke-RestMethod http://localhost:8081/actuator/health
 ```
 
-两个健康接口都应返回 `status: UP`，数据库不可用时不会报告健康。健康检查匿名可读；模拟业务接口须使用读/执行/演示管理三类凭证，其他管理路径拒绝访问。已有 `.env` 请按 `.env.example` 补充 T05 的 `SIMULATOR_*_TOKEN`，缺省为空时拒绝业务访问。预置业务用户账号在 T06 实现。
+两个健康接口都应返回 `status: UP`，数据库不可用时不会报告健康。健康检查匿名可读；模拟业务接口须使用读/执行/演示管理三类凭证，其他管理路径拒绝访问。已有 `.env` 请按 `.env.example` 补充 T05 的 `SIMULATOR_*_TOKEN` 和 T06 的 `DEMO_OPERATOR_PASSWORD`、`DEMO_APPROVER_PASSWORD`，空值禁用对应访问能力。后端任务接口使用预置账号认证及 CSRF 防护。
 
 本机 5432 端口不可绑定时，将 `.env` 的 `POSTGRES_PORT` 改为 `15432`，再执行启动命令。后端和模拟服务默认端口分别为 8080、8081，可通过 `.env` 的 `BACKEND_PORT`、`SIMULATOR_PORT` 修改。对外端口只绑定回环地址。
 
@@ -132,6 +132,19 @@ Remove-Item Env:T02_ALLOW_LIVE
 ./mvnw.cmd -B -ntp verify
 ```
 
+### T06 任务创建与查询
+
+预置 `operator`（创建与查询）和 `approver`（查询）账号，只在 demo/test 启用。密码通过环境变量注入，默认订单权限范围为 `T05-ORDER-`。使用 HTTP Basic 建立 Spring 会话，通过 `/api/auth/csrf` 获取写请求令牌；完整 PowerShell 步骤见 [任务 API](docs/api/tasks.md)。
+
+创建任务只读调用模拟订单接口，然后在同一数据库事务中保存 `QUEUED` 任务、订单限制、初始证据、幂等键和审计。并发/重复创建返回原任务；同一账号用相同幂等键提交不同订单返回 409。查询读取持久化记录；后台推进属于 T07，任务页面属于 T12。
+
+```powershell
+# 从根目录打包两个服务，再验证跨服务 HTTP、真实数据库、并发和独立进程重启
+./mvnw.cmd -B -ntp '-Dit.test=T06TaskIT,FoundationIT' '-Dfailsafe.failIfNoSpecifiedTests=false' verify
+```
+
+T06 集成测试位于 simulator 模块，使用本轮构建的 backend/simulator JAR，独立容器和两个隔离数据库账号。Java 运行镜像配置沿用 `T04_JAVA_IMAGE`；无 Docker 不跳过。验收与边界见 [T06](docs/tasks/T06.md)、[设计决策](docs/decisions/006-t06-task-creation.md)。
+
 ### 目录
 
 T03 比较同一批 12 个案例上的规则、单次模型和按需查询 Agent，运行方法与结果见 [T03](docs/tasks/T03.md)。`./scripts/t03-evaluate.ps1 -Mode offline` 仅跑规则、零模型费用。真实批量运行另需当次授权和 `T03_ALLOW_LIVE=true`，整批最多 60 次请求，不自动重试。该实验使用静态模拟证据，不依赖常驻容器，也不修改数据库。
@@ -139,7 +152,7 @@ T03 比较同一批 12 个案例上的规则、单次模型和按需查询 Agent
 本次实际对照中规则、单次模型均自动通过 12/12，Agent 为 8/12，尚未证明 Agent 净收益；当前保留规则作为政策基线，模型职责收窄为只读证据整理与解释。失败与解释偏差见 [对照报告](docs/evaluation/T03-report.md)。
 
 ```text
-backend/         业务服务基础、模型调用接口与替身
+backend/         任务 API、权限、证据与审计、模型调用接口与替身
 simulator/       独立模拟服务、业务场景及受控修复
 frontend/        Vue + TypeScript 环境状态页
 infra/           数据库初始化、容器健康探针
@@ -149,7 +162,7 @@ docs/decisions/  设计决策
 文档/            原始需求、设计、图示和开发规范
 ```
 
-两套数据库角色没有超级用户、建库、建角色权限；数据库及 public schema 撤销 PUBLIC 默认访问权限。各服务仅获得自身数据库凭证，模拟数据通过 HTTP 获取。Flyway V1 创建服务归属标记，模拟服务 V2 创建业务表。已经执行的迁移不得原地修改。
+两套数据库角色没有超级用户、建库、建角色权限；数据库及 public schema 撤销 PUBLIC 默认访问权限。各服务仅获得自身数据库凭证，模拟数据通过 HTTP 获取。Flyway V1 创建服务归属标记，模拟服务 V2 创建业务表，后端 V2 创建任务及关联记录。已经执行的迁移不得原地修改。
 
 第一版金额使用整数最小货币单位，不支持多币种业务、部分支付、退款或撤销支付；当前场景的支付成功事实不逆转。未来真实支付系统接入需重新设计事实核验协议。
 
