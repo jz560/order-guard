@@ -105,6 +105,7 @@ public class WorkbenchSecurity {
                         "/api/tasks",
                         "/api/tasks/*",
                         "/api/tasks/*/evidence",
+                        "/api/tasks/*/steps",
                         "/api/tasks/*/audit")
                     .hasAnyRole("OPERATOR", "APPROVER")
                     .anyRequest()

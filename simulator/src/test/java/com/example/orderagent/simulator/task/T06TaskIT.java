@@ -95,6 +95,7 @@ class T06TaskIT {
         process("backend")
             .withEnv("SPRING_PROFILES_ACTIVE", profile)
             .withEnv("MODEL_MODE", "stub")
+            .withEnv("WORKER_ENABLED", "false")
             .withEnv("DEMO_OPERATOR_PASSWORD", PASSWORD)
             .withEnv("DEMO_APPROVER_PASSWORD", PASSWORD)
             .withEnv("SIMULATOR_BASE_URL", "http://simulator:8080")

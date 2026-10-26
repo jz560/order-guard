@@ -1,6 +1,6 @@
-# T06 任务 API
+# 任务 API（T06/T07）
 
-默认后端地址 `http://localhost:8080`。T06 只创建持久化 `QUEUED` 任务，尚未接入 Worker 或诊断；不会修改订单。所有响应包含 `X-Correlation-ID`。
+默认后端地址 `http://localhost:8080`。创建时持久化 `QUEUED` 任务；T07 在 demo/test 默认用测试步骤自动推进到 `DIAGNOSING`、`WAITING_APPROVAL`，不调用模型、不创建真实方案、不修改订单。所有响应包含 `X-Correlation-ID`。
 
 ## 账号与访问权限
 
@@ -42,7 +42,8 @@
     "createdBy": "operator",
     "createdAt": "带时区时间",
     "updatedAt": "带时区时间",
-    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT"]
+    "nextRunAt": "下次运行的带时区时间，等待审批时为null",
+    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS"]
   },
   "reused": false
 }
@@ -61,10 +62,24 @@
 | `GET /api/tasks/{id}` | 当前持久化任务详情及允许操作 |
 | `GET /api/tasks/{id}/evidence` | 创建时取得的订单快照数组：id、source、businessVersion、payload、fetchedAt |
 | `GET /api/tasks/{id}/audit?after=0&limit=50` | 基础审计数组：id、actor、eventType、correlationId、createdAt；after 为上次最后一项 ID，limit 为 1—100 |
+| `GET /api/tasks/{id}/steps?after=0&limit=50` | 持久化步骤数组：id、seq、type、status、beforeState、afterState、output、startedAt、finishedAt；权限与详情相同 |
 
-列表按创建时间和任务 ID 倒序排列。初始证据来源为 `SIMULATOR_ORDER`，仅为订单创建时快照；不是诊断结论或最终业务验证。T06 不采集支付和回调证据，也不自动推进状态。刷新以上接口不写业务、不调用模型。
+列表按创建时间和任务 ID 倒序排列。初始证据来源为 `SIMULATOR_ORDER`，仅为订单创建时快照；不是诊断结论或最终业务验证。当前不采集支付和回调证据。Worker 独立推进任务，刷新以上接口本身不触发推进、不写业务、不调用模型。
 
-审计类型：`TASK_CREATED`、`TASK_REUSED`。同幂等键重放不会重复追加审计；新幂等键复用任务会追加复用事件。审计 actor 来自认证上下文，不能由请求体指定。创建事务失败时不留下半条业务审计；异常通过关联 ID 日志排查。
+审计类型：`TASK_CREATED`、`TASK_REUSED`、`WORKER_CLAIMED`、`WORKER_ADVANCED`、`WORKER_RETRY`、`WORKER_FAILED`。同幂等键重放不会重复追加创建审计；新幂等键复用任务会追加复用事件。人工请求的 actor 来自认证上下文，Worker 事件使用服务端生成的 Worker ID。状态、步骤和对应审计同事务保存；旧 Worker 写回失败不会追加步骤。
+
+T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为 `COMPLETED`、`RETRY`、`FAILED`。seq 使用认领 epoch，可能有间隙；分页用 id。等待审批时没有真实方案，不能通过接口批准或执行。
+
+| 配置 | 默认值 | 范围/含义 |
+| --- | --- | --- |
+| `WORKER_ENABLED` | true | 只有纯 demo/test 环境启用；false 不调度 |
+| `WORKER_POLL_MS` | 500 | 50—60000ms，单次处理结束后的扫描间隔 |
+| `WORKER_LEASE_MS` | 30000 | 1000—300000ms，认领租约；数据库时钟判定 |
+| `WORKER_STEP_DELAY_MS` | 1000 | 0—60000ms，测试步骤间隔，不占线程等待 |
+| `WORKER_RETRY_MS` | 1000 | 100—60000ms，步骤异常后的重试间隔 |
+| `WORKER_MAX_FAILURES` | 3 | 1—10，连续步骤失败上限，达到后转人工并保留限制 |
+
+已有 T06 的 QUEUED 任务升级后也会被启用的演示 Worker 扫描。配置 false 可先保持静态状态。租约不会替代下游幂等；当前没有业务写操作。
 
 错误结构 `code, message, correlationId`。主要错误：400 `INVALID_REQUEST`，401 `UNAUTHENTICATED`，403 `FORBIDDEN`（角色/订单范围不足或 CSRF 校验失败），404 `TASK_NOT_FOUND` / `ORDER_NOT_FOUND`，409 `IDEMPOTENCY_CONFLICT` / `TASK_CHANGED`，502 `INVALID_ORDER_EVIDENCE`，503 `SIMULATOR_UNAVAILABLE`，500 `INTERNAL_ERROR`。
 
@@ -89,6 +104,7 @@ $taskId = $result.task.id
 Invoke-RestMethod "$base/api/tasks/$taskId" -Headers $headers -WebSession $operatorSession
 Invoke-RestMethod "$base/api/tasks/$taskId/evidence" -Headers $headers -WebSession $operatorSession
 Invoke-RestMethod "$base/api/tasks/$taskId/audit" -Headers $headers -WebSession $operatorSession
+Invoke-RestMethod "$base/api/tasks/$taskId/steps" -Headers $headers -WebSession $operatorSession
 Invoke-RestMethod "$base/api/tasks?state=QUEUED" -Headers $headers -WebSession $operatorSession
 # 原键重试应复用同一任务
 Invoke-RestMethod "$base/api/tasks" -Method Post -Headers $headers -WebSession $operatorSession -ContentType 'application/json' -Body $body

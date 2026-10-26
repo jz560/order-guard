@@ -37,6 +37,7 @@ public class TaskController {
       String createdBy,
       Instant createdAt,
       Instant updatedAt,
+      Instant nextRunAt,
       List<String> allowedActions) {
     static TaskView from(TaskRow row) {
       return new TaskView(
@@ -48,7 +49,8 @@ public class TaskController {
           row.createdBy(),
           row.createdAt(),
           row.updatedAt(),
-          List.of("VIEW_EVIDENCE", "VIEW_AUDIT"));
+          row.nextRunAt(),
+          List.of("VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS"));
     }
   }
 

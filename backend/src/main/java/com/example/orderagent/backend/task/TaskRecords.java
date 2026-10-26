@@ -20,7 +20,11 @@ public final class TaskRecords {
 
   public enum AuditType {
     TASK_CREATED,
-    TASK_REUSED
+    TASK_REUSED,
+    WORKER_CLAIMED,
+    WORKER_ADVANCED,
+    WORKER_RETRY,
+    WORKER_FAILED
   }
 
   public record TaskRow(
@@ -31,7 +35,8 @@ public final class TaskRecords {
       long version,
       String createdBy,
       Instant createdAt,
-      Instant updatedAt) {}
+      Instant updatedAt,
+      Instant nextRunAt) {}
 
   public record Guard(String orderId, UUID taskId, String reason) {}
 
