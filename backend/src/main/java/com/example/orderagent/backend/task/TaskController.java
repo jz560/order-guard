@@ -39,7 +39,25 @@ public class TaskController {
       Instant updatedAt,
       Instant nextRunAt,
       List<String> allowedActions) {
-    static TaskView from(TaskRow row) {
+    static List<String> actions(TaskRow row, WorkbenchAccount account) {
+      var actions =
+          new ArrayList<>(
+              List.of(
+                  "VIEW_EVIDENCE",
+                  "VIEW_AUDIT",
+                  "VIEW_STEPS",
+                  "VIEW_PLAN",
+                  "VIEW_EXECUTION",
+                  "VIEW_HANDLING"));
+      if (account.role().equals("OPERATOR")
+          && Set.of(State.QUEUED, State.DIAGNOSING, State.WAITING_APPROVAL, State.APPROVED)
+              .contains(row.state())) actions.add("CANCEL");
+      if (account.role().equals("APPROVER") && row.state() != State.FINISHED)
+        actions.add(row.state() == State.MANUAL ? "RESOLVE_MANUAL" : "TAKEOVER");
+      return List.copyOf(actions);
+    }
+
+    static TaskView from(TaskRow row, WorkbenchAccount account) {
       return new TaskView(
           row.id(),
           row.orderId(),
@@ -50,7 +68,7 @@ public class TaskController {
           row.createdAt(),
           row.updatedAt(),
           row.nextRunAt(),
-          List.of("VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS", "VIEW_PLAN", "VIEW_EXECUTION"));
+          actions(row, account));
     }
   }
 
@@ -75,7 +93,7 @@ public class TaskController {
             account, key, request.orderId(), UUID.fromString(ApiErrors.correlation(http)));
     return ResponseEntity.status(result.reused() ? 200 : 201)
         .location(URI.create("/api/tasks/" + result.task().id()))
-        .body(new CreateResult(TaskView.from(result.task()), result.reused()));
+        .body(new CreateResult(TaskView.from(result.task(), account), result.reused()));
   }
 
   @GetMapping
@@ -86,7 +104,9 @@ public class TaskController {
       @RequestParam(defaultValue = "0") @Min(0) @Max(1000000) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
     return new Page(
-        service.list(account, orderId, state, page, size).stream().map(TaskView::from).toList(),
+        service.list(account, orderId, state, page, size).stream()
+            .map(row -> TaskView.from(row, account))
+            .toList(),
         service.count(account, orderId, state),
         page,
         size);
@@ -94,7 +114,7 @@ public class TaskController {
 
   @GetMapping("/{id}")
   public TaskView detail(@AuthenticationPrincipal WorkbenchAccount account, @PathVariable UUID id) {
-    return TaskView.from(service.detail(account, id));
+    return TaskView.from(service.detail(account, id), account);
   }
 
   @GetMapping("/{id}/evidence")

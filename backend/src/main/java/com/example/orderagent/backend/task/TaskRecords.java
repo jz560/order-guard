@@ -30,7 +30,10 @@ public final class TaskRecords {
     PLAN_REJECTED,
     PLAN_EXPIRED,
     EXECUTION_INTENT,
-    EXECUTION_PROGRESS
+    EXECUTION_PROGRESS,
+    TASK_CANCELLED,
+    TASK_TAKEN_OVER,
+    MANUAL_RESOLVED
   }
 
   public record TaskRow(

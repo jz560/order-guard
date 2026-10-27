@@ -98,6 +98,11 @@ public class WorkbenchSecurity {
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/plans/*/decision")
                     .hasRole("APPROVER")
+                    .requestMatchers(HttpMethod.POST, "/api/tasks/*/cancel")
+                    .hasRole("OPERATOR")
+                    .requestMatchers(
+                        HttpMethod.POST, "/api/tasks/*/takeover", "/api/tasks/*/resolve")
+                    .hasRole("APPROVER")
                     .requestMatchers(HttpMethod.POST, "/api/tasks")
                     .hasRole("OPERATOR")
                     .requestMatchers(
@@ -109,6 +114,7 @@ public class WorkbenchSecurity {
                         "/api/tasks/*/evidence",
                         "/api/tasks/*/plan",
                         "/api/tasks/*/execution",
+                        "/api/tasks/*/handling",
                         "/api/plans/*",
                         "/api/tasks/*/steps",
                         "/api/tasks/*/audit")

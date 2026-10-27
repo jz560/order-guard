@@ -235,7 +235,18 @@ class T06TaskIT {
     assertThat(created.get("task").get("state").asText()).isEqualTo("QUEUED");
     assertThat(created.get("task").get("outcome").isNull()).isTrue();
     var detail = data(http("GET", "/api/tasks/" + taskId, "approver", null, null, false), 200);
-    assertThat(detail).isEqualTo(created.get("task"));
+    var operatorDetail =
+        data(http("GET", "/api/tasks/" + taskId, "operator", null, null, false), 200);
+    assertThat(operatorDetail).isEqualTo(created.get("task"));
+    assertThat(operatorDetail.get("allowedActions").toString())
+        .contains("CANCEL")
+        .doesNotContain("TAKEOVER");
+    assertThat(detail.get("allowedActions").toString())
+        .contains("TAKEOVER")
+        .doesNotContain("CANCEL");
+    var sharedDetail = (tools.jackson.databind.node.ObjectNode) detail.deepCopy();
+    sharedDetail.set("allowedActions", operatorDetail.get("allowedActions"));
+    assertThat(sharedDetail).isEqualTo(operatorDetail);
     var evidence =
         data(http("GET", "/api/tasks/" + taskId + "/evidence", "operator", null, null, false), 200);
     assertThat(evidence.size()).isEqualTo(1);

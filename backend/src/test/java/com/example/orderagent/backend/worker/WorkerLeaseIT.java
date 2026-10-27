@@ -53,7 +53,7 @@ class WorkerLeaseIT {
   @BeforeEach
   void clearDedicatedTestDatabase() {
     jdbc.execute(
-        "TRUNCATE execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
+        "TRUNCATE task_handling,execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
   }
 
   UUID task() {
@@ -239,6 +239,33 @@ class WorkerLeaseIT {
                 Integer.class))
         .isZero();
     assertThat(tx.complete(claim, step.run(claim))).isTrue();
+  }
+
+  @Test
+  void cancellationStopsQueuedAndDiagnosingWorkersBeforeTheyCanCreatePlan() {
+    for (boolean diagnosing : List.of(false, true)) {
+      UUID id = task();
+      var claim = tx.claim("worker");
+      if (diagnosing) {
+        tx.complete(claim, step.run(claim));
+        claim = tx.claim("worker");
+      }
+      var service = context.getBean(com.example.orderagent.backend.handling.HandlingService.class);
+      service.handle(
+          new com.example.orderagent.backend.security.WorkbenchAccount(
+              "operator", "unused", "OPERATOR", "T05-"),
+          id,
+          com.example.orderagent.backend.handling.HandlingRecords.Action.CANCEL,
+          claim.version(),
+          "用户取消",
+          null,
+          UUID.randomUUID());
+      assertThat(tx.complete(claim, step.run(claim))).isFalse();
+      assertThat(state(id)).isEqualTo("FINISHED");
+      assertThat(
+              jdbc.queryForObject("SELECT count(*) FROM plan WHERE task_id=?", Integer.class, id))
+          .isZero();
+    }
   }
 
   @Test

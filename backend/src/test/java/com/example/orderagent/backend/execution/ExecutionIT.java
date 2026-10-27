@@ -61,7 +61,7 @@ class ExecutionIT {
   @BeforeEach
   void clear() {
     jdbc.execute(
-        "TRUNCATE execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
+        "TRUNCATE task_handling,execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
   }
 
   PlanRow plan(boolean approve, boolean expired) {
@@ -283,6 +283,168 @@ class ExecutionIT {
     assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isEqualTo(1);
   }
 
+  com.example.orderagent.backend.handling.HandlingRecords.Record handling(
+      PlanRow plan, String action, long version, String resolution, Operation op, Facts facts) {
+    var who =
+        action.equals("CANCEL")
+            ? new WorkbenchAccount("operator", "unused", "OPERATOR", "T05-")
+            : actor;
+    return context
+        .getBean(com.example.orderagent.backend.handling.HandlingTransactions.class)
+        .apply(
+            who,
+            plan.taskId(),
+            com.example.orderagent.backend.handling.HandlingRecords.Action.valueOf(action),
+            version,
+            "测试处置",
+            resolution == null
+                ? null
+                : com.example.orderagent.backend.handling.HandlingRecords.Resolution.valueOf(
+                    resolution),
+            UUID.randomUUID(),
+            op,
+            facts);
+  }
+
+  long version(UUID id) {
+    return jdbc.queryForObject("SELECT version FROM task WHERE id=?", Long.class, id);
+  }
+
+  @Test
+  void cancellationAndExecutionStartHaveExactlyOneWinner() throws Exception {
+    var p = plan(true, false);
+    var claim = tx.claim("worker");
+    try (var pool = Executors.newFixedThreadPool(2)) {
+      var gate = new CountDownLatch(1);
+      var cancel =
+          pool.submit(
+              () -> {
+                gate.await();
+                try {
+                  handling(p, "CANCEL", claim.version(), null, null, null);
+                  return true;
+                } catch (com.example.orderagent.backend.api.ApiException e) {
+                  assertThat(e.status()).isEqualTo(409);
+                  return false;
+                }
+              });
+      var execute =
+          pool.submit(
+              () -> {
+                gate.await();
+                return tx.start(claim, p.id(), facts(params(p), false));
+              });
+      gate.countDown();
+      boolean cancelled = cancel.get();
+      var started = execute.get();
+      assertThat(cancelled).isEqualTo(started == null);
+      assertThat(state(p.taskId())).isEqualTo(cancelled ? "FINISHED" : "EXECUTING");
+      assertThat(mapper.execution(p.taskId()) == null).isEqualTo(cancelled);
+    }
+  }
+
+  @Test
+  void cancellationInvalidatesClaimAndCannotBeUndoneByApproval() {
+    var p = plan(true, false);
+    var c = tx.claim("worker");
+    var record = handling(p, "CANCEL", c.version(), null, null, null);
+    assertThat(tx.start(c, p.id(), facts(params(p), false))).isNull();
+    assertThat(handling(p, "CANCEL", c.version(), null, null, null).id()).isEqualTo(record.id());
+    approval.decide(
+        actor, p.id(), p.version(), p.paramsHash(), Decision.APPROVE, null, UUID.randomUUID());
+    assertThat(state(p.taskId())).isEqualTo("FINISHED");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isZero();
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM task_handling", Integer.class))
+        .isEqualTo(1);
+  }
+
+  @Test
+  void postIntentCancellationLeavesConfirmationRunning() {
+    var p = plan(true, false);
+    var started = tx.start(tx.claim("worker"), p.id(), facts(params(p), false));
+    assertThatThrownBy(() -> handling(p, "CANCEL", started.claim().version(), null, null, null))
+        .isInstanceOf(com.example.orderagent.backend.api.ApiException.class);
+    assertThat(state(p.taskId())).isEqualTo("EXECUTING");
+    tx.received(started.claim(), started.params(), success(started));
+    assertThat(state(p.taskId())).isEqualTo("VERIFYING");
+  }
+
+  @Test
+  void takeoverFencesOldWorkerAndUnknownCannotBeClosedAsNotExecuted() {
+    var p = plan(true, false);
+    var started = tx.start(tx.claim("worker"), p.id(), facts(params(p), false));
+    handling(p, "TAKEOVER", started.claim().version(), null, null, null);
+    tx.received(started.claim(), started.params(), success(started));
+    assertThat(state(p.taskId())).isEqualTo("MANUAL");
+    assertThat(tx.claim("new-worker")).isNull();
+    assertThatThrownBy(
+            () -> handling(p, "RESOLVE", version(p.taskId()), "NO_EXECUTION", null, null))
+        .isInstanceOf(com.example.orderagent.backend.api.ApiException.class);
+    assertThatThrownBy(
+            () -> handling(p, "RESOLVE", version(p.taskId()), "CONFIRM_OPERATION", null, null))
+        .isInstanceOf(com.example.orderagent.backend.api.ApiException.class);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isEqualTo(1);
+  }
+
+  @Test
+  void resolutionRequiresVerifiedFactsAndCommitsEvidenceOnce() {
+    var p = plan(true, false);
+    var started = tx.start(tx.claim("worker"), p.id(), facts(params(p), false));
+    handling(p, "TAKEOVER", started.claim().version(), null, null, null);
+    long expected = version(p.taskId());
+    assertThatThrownBy(
+            () ->
+                handling(
+                    p,
+                    "RESOLVE",
+                    expected,
+                    "CONFIRM_OPERATION",
+                    success(started),
+                    facts(params(p), false)))
+        .isInstanceOf(com.example.orderagent.backend.api.ApiException.class);
+    var done =
+        handling(
+            p, "RESOLVE", expected, "CONFIRM_OPERATION", success(started), facts(params(p), true));
+    assertThat(handling(p, "RESOLVE", expected, "CONFIRM_OPERATION", null, null).id())
+        .isEqualTo(done.id());
+    assertThat(state(p.taskId())).isEqualTo("FINISHED");
+    assertThat(mapper.execution(p.taskId()).status()).isEqualTo(Status.SUCCEEDED);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isZero();
+    assertThat(
+            jdbc.queryForObject(
+                "SELECT count(*) FROM evidence WHERE source='MANUAL_RESOLUTION'", Integer.class))
+        .isEqualTo(1);
+  }
+
+  @Test
+  void noIntentManualClosureReleasesGuardAndRecordsActor() {
+    var p = plan(false, false);
+    handling(p, "TAKEOVER", version(p.taskId()), null, null, null);
+    var record = handling(p, "RESOLVE", version(p.taskId()), "NO_EXECUTION", null, null);
+    assertThat(record.actor()).isEqualTo("approver");
+    assertThat(record.outcome()).isEqualTo("MANUAL_CLOSED_WITHOUT_EXECUTION");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isZero();
+    assertThatThrownBy(() -> jdbc.update("DELETE FROM task_handling"))
+        .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+  }
+
+  @Test
+  void cancellationAuditFailureRollsBackGuardAndState() {
+    var p = plan(false, false);
+    long expected = version(p.taskId());
+    jdbc.execute(
+        "ALTER TABLE audit_event ADD CONSTRAINT t10_fail CHECK(event_type<>'TASK_CANCELLED') NOT VALID");
+    try {
+      assertThatThrownBy(() -> handling(p, "CANCEL", expected, null, null, null))
+          .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    } finally {
+      jdbc.execute("ALTER TABLE audit_event DROP CONSTRAINT t10_fail");
+    }
+    assertThat(state(p.taskId())).isEqualTo("WAITING_APPROVAL");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM task_handling", Integer.class)).isZero();
+  }
+
   @Test
   void auditFailureRollsBackIntentAndState() {
     var p = plan(true, false);
@@ -301,5 +463,33 @@ class ExecutionIT {
             jdbc.queryForObject(
                 "SELECT count(*) FROM evidence WHERE source='EXECUTION_PRECHECK'", Integer.class))
         .isZero();
+  }
+
+  @Test
+  void manualDefinitiveRejectionReleasesGuardWithRecordedResult() {
+    var p = plan(true, false);
+    var s = tx.start(tx.claim("worker"), p.id(), facts(params(p), false));
+    handling(p, "TAKEOVER", s.claim().version(), null, null, null);
+    var params = s.params();
+    var rejected =
+        new Operation(
+            s.execution().operationId().toString(),
+            params.orderId(),
+            params.paymentId(),
+            params.amountMinor(),
+            params.currency(),
+            params.expectedVersion(),
+            params.action(),
+            "REJECTED",
+            "SCENARIO_REPLACED",
+            "拒绝",
+            1,
+            1,
+            Instant.now());
+    var record = handling(p, "RESOLVE", version(p.taskId()), "CONFIRM_OPERATION", rejected, null);
+    assertThat(record.outcome()).isEqualTo("MANUAL_EXECUTION_REJECTED");
+    assertThat(record.evidenceId()).isNotNull();
+    assertThat(mapper.execution(p.taskId()).status()).isEqualTo(Status.REJECTED);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM order_guard", Integer.class)).isZero();
   }
 }
