@@ -24,7 +24,11 @@ public final class TaskRecords {
     WORKER_CLAIMED,
     WORKER_ADVANCED,
     WORKER_RETRY,
-    WORKER_FAILED
+    WORKER_FAILED,
+    PLAN_CREATED,
+    PLAN_APPROVED,
+    PLAN_REJECTED,
+    PLAN_EXPIRED
   }
 
   public record TaskRow(

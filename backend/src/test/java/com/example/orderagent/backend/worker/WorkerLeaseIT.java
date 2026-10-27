@@ -52,7 +52,8 @@ class WorkerLeaseIT {
 
   @BeforeEach
   void clearDedicatedTestDatabase() {
-    jdbc.execute("TRUNCATE task_step,audit_event,evidence,task_creation_request,order_guard,task");
+    jdbc.execute(
+        "TRUNCATE approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
   }
 
   UUID task() {
@@ -64,6 +65,13 @@ class WorkerLeaseIT {
         order);
     jdbc.update(
         "INSERT INTO order_guard(order_id,task_id,reason) VALUES(?,?,'ACTIVE_TASK')", order, id);
+    jdbc.update(
+        "INSERT INTO evidence(id,task_id,source,business_version,payload,fetched_at) VALUES(?,?,'SIMULATOR_ORDER',1,?::jsonb,clock_timestamp())",
+        UUID.randomUUID(),
+        id,
+        "{\"id\":\""
+            + order
+            + "\",\"paymentId\":\"PAY-1\",\"amountMinor\":10000,\"currency\":\"CNY\",\"version\":1,\"status\":\"PENDING_PAYMENT\",\"scenario\":\"CALLBACK_FAILED\"}");
     return id;
   }
 
@@ -253,5 +261,31 @@ class WorkerLeaseIT {
     assertThatThrownBy(() -> tx.complete(claim, new Result(State.EXECUTING, "BAD", "禁止跳过审批", 0)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(state(id)).isEqualTo("QUEUED");
+  }
+
+  @Test
+  void planAndWaitingStateCommitTogetherAndStaleWorkerCannotCreatePlan() {
+    UUID id = task();
+    var first = tx.claim("worker");
+    tx.complete(first, step.run(first));
+    var stale = tx.claim("worker");
+    expire(id);
+    assertThat(tx.complete(stale, step.run(stale))).isFalse();
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM plan", Integer.class)).isZero();
+    var current = tx.claim("worker");
+    jdbc.execute(
+        "ALTER TABLE task_step ADD CONSTRAINT t08_fail_wait CHECK(type <> 'TEST_WAIT') NOT VALID");
+    try {
+      assertThatThrownBy(() -> tx.complete(current, step.run(current)))
+          .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    } finally {
+      jdbc.execute("ALTER TABLE task_step DROP CONSTRAINT t08_fail_wait");
+    }
+    assertThat(state(id)).isEqualTo("DIAGNOSING");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM plan", Integer.class)).isZero();
+    assertThat(tx.complete(current, step.run(current))).isTrue();
+    assertThat(state(id)).isEqualTo("WAITING_APPROVAL");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM plan", Integer.class)).isEqualTo(1);
+    assertThat(tx.complete(current, step.run(current))).isFalse();
   }
 }

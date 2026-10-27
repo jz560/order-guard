@@ -1,5 +1,6 @@
 package com.example.orderagent.backend.worker;
 
+import com.example.orderagent.backend.approval.PlanService;
 import com.example.orderagent.backend.task.*;
 import com.example.orderagent.backend.task.TaskRecords.*;
 import com.example.orderagent.backend.worker.WorkerRecords.*;
@@ -12,15 +13,19 @@ public class WorkerTransactions {
   private final WorkerMapper mapper;
   private final TaskMapper tasks;
   private final WorkerSettings settings;
+  private final PlanService plans;
 
-  public WorkerTransactions(WorkerMapper mapper, TaskMapper tasks, WorkerSettings settings) {
+  public WorkerTransactions(
+      WorkerMapper mapper, TaskMapper tasks, WorkerSettings settings, PlanService plans) {
     this.mapper = mapper;
     this.tasks = tasks;
     this.settings = settings;
+    this.plans = plans;
   }
 
   @Transactional
   public Claim claim(String owner) {
+    plans.expireOne();
     var claim = mapper.claim(owner, settings.leaseMillis());
     if (claim != null) audit(claim, AuditType.WORKER_CLAIMED);
     return claim;
@@ -41,6 +46,7 @@ public class WorkerTransactions {
             result.nextState() == State.DIAGNOSING,
             result.delayMillis())
         != 1) return false;
+    if (result.nextState() == State.WAITING_APPROVAL) plans.freezeTestPlan(claim.taskId());
     mapper.step(claim, result.type(), "COMPLETED", result.nextState(), result.message());
     audit(claim, AuditType.WORKER_ADVANCED);
     return true;

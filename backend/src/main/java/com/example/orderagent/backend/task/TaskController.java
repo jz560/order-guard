@@ -50,7 +50,7 @@ public class TaskController {
           row.createdAt(),
           row.updatedAt(),
           row.nextRunAt(),
-          List.of("VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS"));
+          List.of("VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS", "VIEW_PLAN"));
     }
   }
 

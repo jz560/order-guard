@@ -87,7 +87,7 @@ class T07WorkerIT {
               fixture.http("GET", "/api/tasks/" + id + "/steps", "operator", null, null, false),
               200);
       assertThat(steps.size()).isEqualTo(2);
-      assertThat(steps.get(1).get("output").asText()).contains("没有真实诊断结论或可审批方案");
+      assertThat(steps.get(1).get("output").asText()).contains("T08 测试方案");
       long cursor = steps.get(0).get("id").asLong();
       assertThat(
               fixture

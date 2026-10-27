@@ -43,7 +43,7 @@
     "createdAt": "带时区时间",
     "updatedAt": "带时区时间",
     "nextRunAt": "下次运行的带时区时间，等待审批时为null",
-    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS"]
+    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS", "VIEW_PLAN"]
   },
   "reused": false
 }
@@ -66,9 +66,9 @@
 
 列表按创建时间和任务 ID 倒序排列。初始证据来源为 `SIMULATOR_ORDER`，仅为订单创建时快照；不是诊断结论或最终业务验证。当前不采集支付和回调证据。Worker 独立推进任务，刷新以上接口本身不触发推进、不写业务、不调用模型。
 
-审计类型：`TASK_CREATED`、`TASK_REUSED`、`WORKER_CLAIMED`、`WORKER_ADVANCED`、`WORKER_RETRY`、`WORKER_FAILED`。同幂等键重放不会重复追加创建审计；新幂等键复用任务会追加复用事件。人工请求的 actor 来自认证上下文，Worker 事件使用服务端生成的 Worker ID。状态、步骤和对应审计同事务保存；旧 Worker 写回失败不会追加步骤。
+审计类型：`TASK_CREATED`、`TASK_REUSED`、`WORKER_CLAIMED`、`WORKER_ADVANCED`、`WORKER_RETRY`、`WORKER_FAILED`、`PLAN_CREATED`、`PLAN_APPROVED`、`PLAN_REJECTED`、`PLAN_EXPIRED`。同幂等键重放不会重复追加创建审计；新幂等键复用任务会追加复用事件。人工请求的 actor 来自认证上下文，Worker 事件使用服务端生成的 Worker ID。状态、步骤和对应审计同事务保存；旧 Worker 写回失败不会追加步骤。
 
-T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为 `COMPLETED`、`RETRY`、`FAILED`。seq 使用认领 epoch，可能有间隙；分页用 id。等待审批时没有真实方案，不能通过接口批准或执行。
+T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为 `COMPLETED`、`RETRY`、`FAILED`。seq 使用认领 epoch，可能有间隙；分页用 id。T08 起，等待审批与冻结测试方案同事务保存，可以通过[审批接口](plans.md)批准或拒绝；批准后停在 APPROVED，业务执行由 T09 接入。
 
 | 配置 | 默认值 | 范围/含义 |
 | --- | --- | --- |

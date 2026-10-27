@@ -96,6 +96,8 @@ public class WorkbenchSecurity {
             a ->
                 a.requestMatchers("/actuator/health")
                     .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/plans/*/decision")
+                    .hasRole("APPROVER")
                     .requestMatchers(HttpMethod.POST, "/api/tasks")
                     .hasRole("OPERATOR")
                     .requestMatchers(
@@ -105,6 +107,8 @@ public class WorkbenchSecurity {
                         "/api/tasks",
                         "/api/tasks/*",
                         "/api/tasks/*/evidence",
+                        "/api/tasks/*/plan",
+                        "/api/plans/*",
                         "/api/tasks/*/steps",
                         "/api/tasks/*/audit")
                     .hasAnyRole("OPERATOR", "APPROVER")
