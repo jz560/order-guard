@@ -1,0 +1,170 @@
+[
+  {
+    "suite": "com.example.orderagent.backend.diagnosis.DeepSeekModelGatewayTest",
+    "kind": "unit",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.diagnosis.ModelConfigurationTest",
+    "kind": "unit",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.diagnosis.ProbeLoopTest",
+    "kind": "unit",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.evaluation.PilotEvaluationTest",
+    "kind": "unit",
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.execution.ExecutionPolicyTest",
+    "kind": "unit",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.recovery.ProbeProtocolTest",
+    "kind": "unit",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.task.SimulatorOrderClientTest",
+    "kind": "unit",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.worker.TaskWorkerTest",
+    "kind": "unit",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.approval.PlanApprovalIT",
+    "kind": "integration",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.execution.ExecutionIT",
+    "kind": "integration",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.FoundationIT",
+    "kind": "integration",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.backend.worker.WorkerLeaseIT",
+    "kind": "integration",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.business.BusinessPolicyTest",
+    "kind": "unit",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.recovery.ProbeProtocolTest",
+    "kind": "unit",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.business.BusinessSimulationIT",
+    "kind": "integration",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.FoundationIT",
+    "kind": "integration",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.recovery.T04RecoveryIT",
+    "kind": "integration",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.task.T06TaskIT",
+    "kind": "integration",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.task.T07WorkerIT",
+    "kind": "integration",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.task.T08ApprovalIT",
+    "kind": "integration",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.example.orderagent.simulator.task.T09ExecutionIT",
+    "kind": "integration",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]

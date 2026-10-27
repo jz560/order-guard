@@ -67,7 +67,7 @@ class FoundationIT {
           assertThat(
                   jdbc.queryForObject(
                       "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class))
-              .isEqualTo(4);
+              .isEqualTo(5);
           Object current =
               jdbc.queryForObject("SELECT initialized_at FROM service_identity", Object.class);
           if (start == 0) initializedAt = current;

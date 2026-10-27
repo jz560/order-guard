@@ -34,7 +34,7 @@ decision 仅接受 APPROVE/REJECT。拒绝原因必填且不能纯空白，原�
 
 同一方案、版本、摘要、审批人、决定及规范化原因的重复提交返回原审批和当前任务状态，不刷新有效期、不重复审计、不再次推进任务。即使原决定已过期也可只读式重放，响应 `expired=true`，不会恢复授权。冲突决定或改写原因返回 409。被拒绝/过期且尚未开始执行的任务可以用**新的创建幂等键**创建新任务；旧创建键始终返回旧任务。
 
-方案和最终审批由数据库触发器禁止原地修改及删除。未来如追加新版本，旧版本的批准不适用于新方案；当前接口拒绝对非最新方案提交决定。执行模块必须重新验证最新方案、摘要、批准决定、有效期和业务事实，再原子创建唯一执行意图；T08 尚无执行模块。
+方案和最终审批由数据库触发器禁止原地修改及删除。未来如追加新版本，旧版本的批准不适用于新方案；当前接口拒绝对非最新方案提交决定。执行模块必须重新验证最新方案、摘要、批准决定、有效期和业务事实，再原子创建唯一执行意图；T09 已接入执行模块，详见 [受控执行](execution.md)。
 
 | HTTP | 主要错误码 |
 | --- | --- |
@@ -63,4 +63,4 @@ Invoke-RestMethod "$base/api/plans/$($plan.id)/decision" -Method Post -Headers $
 Invoke-RestMethod "$base/api/plans/$($plan.id)/decision" -Method Post -Headers $approverHeaders -WebSession $approverSession -ContentType 'application/json' -Body $decisionBody
 ```
 
-当前批准后停留 APPROVED；T09 负责受控执行和结果确认，T13 提供审批页面。升级 V4 会将 T07 留下的无方案 WAITING_APPROVAL 测试任务恢复到 DIAGNOSING，由启用的 Worker 生成方案；已有步骤和审计保留。
+T09 起，配置完整执行凭证的 Worker 自动接续 APPROVED 完成受控执行与结果确认；T13 提供审批页面。升级 V4 会将 T07 留下的无方案 WAITING_APPROVAL 测试任务恢复到 DIAGNOSING，由启用的 Worker 生成方案；已有步骤和审计保留。

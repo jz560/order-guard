@@ -28,7 +28,9 @@ public final class TaskRecords {
     PLAN_CREATED,
     PLAN_APPROVED,
     PLAN_REJECTED,
-    PLAN_EXPIRED
+    PLAN_EXPIRED,
+    EXECUTION_INTENT,
+    EXECUTION_PROGRESS
   }
 
   public record TaskRow(

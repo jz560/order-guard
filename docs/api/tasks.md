@@ -43,7 +43,7 @@
     "createdAt": "带时区时间",
     "updatedAt": "带时区时间",
     "nextRunAt": "下次运行的带时区时间，等待审批时为null",
-    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS", "VIEW_PLAN"]
+    "allowedActions": ["VIEW_EVIDENCE", "VIEW_AUDIT", "VIEW_STEPS", "VIEW_PLAN", "VIEW_EXECUTION"]
   },
   "reused": false
 }
@@ -64,11 +64,11 @@
 | `GET /api/tasks/{id}/audit?after=0&limit=50` | 基础审计数组：id、actor、eventType、correlationId、createdAt；after 为上次最后一项 ID，limit 为 1—100 |
 | `GET /api/tasks/{id}/steps?after=0&limit=50` | 持久化步骤数组：id、seq、type、status、beforeState、afterState、output、startedAt、finishedAt；权限与详情相同 |
 
-列表按创建时间和任务 ID 倒序排列。初始证据来源为 `SIMULATOR_ORDER`，仅为订单创建时快照；不是诊断结论或最终业务验证。当前不采集支付和回调证据。Worker 独立推进任务，刷新以上接口本身不触发推进、不写业务、不调用模型。
+列表按创建时间和任务 ID 倒序排列。初始证据来源为 `SIMULATOR_ORDER`，仅为订单创建时快照；不是诊断结论或最终业务验证。执行前复核及最终验证另存订单/支付事实快照，尚未采集回调诊断证据。Worker 独立推进任务，刷新以上接口本身不触发推进、不写业务、不调用模型。
 
-审计类型：`TASK_CREATED`、`TASK_REUSED`、`WORKER_CLAIMED`、`WORKER_ADVANCED`、`WORKER_RETRY`、`WORKER_FAILED`、`PLAN_CREATED`、`PLAN_APPROVED`、`PLAN_REJECTED`、`PLAN_EXPIRED`。同幂等键重放不会重复追加创建审计；新幂等键复用任务会追加复用事件。人工请求的 actor 来自认证上下文，Worker 事件使用服务端生成的 Worker ID。状态、步骤和对应审计同事务保存；旧 Worker 写回失败不会追加步骤。
+审计类型：`TASK_CREATED`、`TASK_REUSED`、`WORKER_CLAIMED`、`WORKER_ADVANCED`、`WORKER_RETRY`、`WORKER_FAILED`、`PLAN_CREATED`、`PLAN_APPROVED`、`PLAN_REJECTED`、`PLAN_EXPIRED`、`EXECUTION_INTENT`、`EXECUTION_PROGRESS`。同幂等键重放不会重复追加创建审计；新幂等键复用任务会追加复用事件。人工请求的 actor 来自认证上下文，Worker 事件使用服务端生成的 Worker ID。状态、步骤和对应审计同事务保存；旧 Worker 写回失败不会追加步骤。
 
-T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为 `COMPLETED`、`RETRY`、`FAILED`。seq 使用认领 epoch，可能有间隙；分页用 id。T08 起，等待审批与冻结测试方案同事务保存，可以通过[审批接口](plans.md)批准或拒绝；批准后停在 APPROVED，业务执行由 T09 接入。
+T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为 `COMPLETED`、`RETRY`、`FAILED`。seq 使用认领 epoch，可能有间隙；分页用 id。T08 起，等待审批与冻结测试方案同事务保存，可以通过[审批接口](plans.md)批准或拒绝；T09 已接入[受控执行](execution.md)，配置执行凭证后批准任务自动继续运行。
 
 | 配置 | 默认值 | 范围/含义 |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ T07 步骤类型为 `TEST_START`、`TEST_WAIT` 或 `TEST_STEP_ERROR`；状态为
 | `WORKER_RETRY_MS` | 1000 | 100—60000ms，步骤异常后的重试间隔 |
 | `WORKER_MAX_FAILURES` | 3 | 1—10，连续步骤失败上限，达到后转人工并保留限制 |
 
-已有 T06 的 QUEUED 任务升级后也会被启用的演示 Worker 扫描。配置 false 可先保持静态状态。租约不会替代下游幂等；当前没有业务写操作。
+已有 T06 的 QUEUED 任务升级后也会被启用的演示 Worker 扫描。配置 false 可先保持静态状态。租约不会替代下游幂等；T09 执行 Worker 使用持久化意图及下游幂等控制业务写操作。
 
 错误结构 `code, message, correlationId`。主要错误：400 `INVALID_REQUEST`，401 `UNAUTHENTICATED`，403 `FORBIDDEN`（角色/订单范围不足或 CSRF 校验失败），404 `TASK_NOT_FOUND` / `ORDER_NOT_FOUND`，409 `IDEMPOTENCY_CONFLICT` / `TASK_CHANGED`，502 `INVALID_ORDER_EVIDENCE`，503 `SIMULATOR_UNAVAILABLE`，500 `INTERNAL_ERROR`。
 

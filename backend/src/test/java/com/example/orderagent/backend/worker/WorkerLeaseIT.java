@@ -53,7 +53,7 @@ class WorkerLeaseIT {
   @BeforeEach
   void clearDedicatedTestDatabase() {
     jdbc.execute(
-        "TRUNCATE approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
+        "TRUNCATE execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
   }
 
   UUID task() {

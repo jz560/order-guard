@@ -108,6 +108,7 @@ public class WorkbenchSecurity {
                         "/api/tasks/*",
                         "/api/tasks/*/evidence",
                         "/api/tasks/*/plan",
+                        "/api/tasks/*/execution",
                         "/api/plans/*",
                         "/api/tasks/*/steps",
                         "/api/tasks/*/audit")
