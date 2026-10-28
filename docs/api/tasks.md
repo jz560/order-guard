@@ -113,3 +113,5 @@ Invoke-RestMethod "$base/api/tasks" -Method Post -Headers $headers -WebSession $
 本任务没有前端任务页面；T12 才提供页面创建和查询交互。
 
 T10 增加按角色和状态返回的 CANCEL、TAKEOVER、RESOLVE_MANUAL，以及 VIEW_HANDLING。取消、人工接管、核实结案和不可变处置记录见[处置接口](handling.md)。
+
+T11 默认使用持久化诊断，新增 VIEW_DIAGNOSIS 和只读诊断日志接口，详见[诊断 API](diagnosis.md)。上文 T07 测试步骤仅在显式 legacy-test 模式运行。

@@ -115,6 +115,7 @@ public class WorkbenchSecurity {
                         "/api/tasks/*/plan",
                         "/api/tasks/*/execution",
                         "/api/tasks/*/handling",
+                        "/api/tasks/*/diagnosis",
                         "/api/plans/*",
                         "/api/tasks/*/steps",
                         "/api/tasks/*/audit")

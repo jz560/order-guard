@@ -38,6 +38,15 @@ management:
       probes:
         enabled: true
 agent:
+  diagnosis:
+    mode: ${DIAGNOSIS_MODE:agent}
+    rounds: ${DIAGNOSIS_ROUNDS:6}
+    tools: ${DIAGNOSIS_TOOLS:12}
+    repeats: ${DIAGNOSIS_REPEATS:2}
+    reviews: ${DIAGNOSIS_REVIEWS:1}
+    timeout-ms: ${DIAGNOSIS_TIMEOUT_MS:30000}
+    total-ms: ${DIAGNOSIS_TOTAL_MS:120000}
+    review-ms: ${DIAGNOSIS_REVIEW_MS:10000}
   worker:
     enabled: ${WORKER_ENABLED:true}
     poll-ms: ${WORKER_POLL_MS:500}

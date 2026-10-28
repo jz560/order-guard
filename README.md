@@ -2,7 +2,7 @@
 
 面向订单运营人员的个人演示项目。第一版只处理“支付成功但订单仍待支付”。模型提出建议，审批后的 Java 服务执行并验证结果。订单、支付和回调均为模拟数据，不接入真实资金。
 
-当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**、**T05 业务模拟场景**、**T06 任务创建与查询**、**T07 后台任务推进**、**T08 方案审批**、**T09 受控执行与结果确认**和 **T10 取消与人工接管**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、六种业务场景，以及带权限、订单限制、证据、审计和租约 Worker 的任务 API。Worker 当前根据订单快照生成冻结的固定测试方案，可通过接口批准或拒绝。批准后由 Worker 复核、执行并验证业务结果；超时及重启后查询原操作。真实诊断与任务前端页面尚未接入。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)、[T06](docs/tasks/T06.md)、[T07](docs/tasks/T07.md)、[T08](docs/tasks/T08.md)、[T09](docs/tasks/T09.md)、[T10](docs/tasks/T10.md)。取消与人工核实见 [处置接口](docs/api/handling.md)。审批及执行体验见 [方案审批](docs/api/plans.md)、[受控执行](docs/api/execution.md)。
+当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**、**T05 业务模拟场景**、**T06 任务创建与查询**、**T07 后台任务推进**、**T08 方案审批**、**T09 受控执行与结果确认**、**T10 取消与人工接管**和 **T11 Agent 诊断**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、六种业务场景，以及带权限、订单限制、证据、审计和租约 Worker 的任务 API。Worker 默认按 T11 诊断，只有证据与规则校验通过才生成冻结方案，可通过接口批准或拒绝。批准后由 Worker 复核、执行并验证业务结果；超时及重启后查询原操作。T11 已接入真实只读查询、持久化工具循环、规则校验和诊断恢复；默认模型为无费用替身，任务前端页面尚未接入。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)、[T06](docs/tasks/T06.md)、[T07](docs/tasks/T07.md)、[T08](docs/tasks/T08.md)、[T09](docs/tasks/T09.md)、[T10](docs/tasks/T10.md)、[T11](docs/tasks/T11.md)。诊断运行与预算配置见 [诊断 API](docs/api/diagnosis.md)。取消与人工核实见 [处置接口](docs/api/handling.md)。审批及执行体验见 [方案审批](docs/api/plans.md)、[受控执行](docs/api/execution.md)。
 
 ## 环境
 

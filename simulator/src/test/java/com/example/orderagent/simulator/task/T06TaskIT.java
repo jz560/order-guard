@@ -79,6 +79,7 @@ class T06TaskIT {
         .withCopyFileToContainer(MountableFile.forHostPath(jar), "/tmp/app.jar")
         .withCommand("-jar", "/tmp/app.jar", "--server.port=8080")
         .withEnv("SPRING_PROFILES_ACTIVE", "test")
+        .withEnv("DIAGNOSIS_MODE", "legacy-test")
         .withEnv(
             prefix + "_DB_URL",
             "jdbc:postgresql://pg:5432/" + (app ? "agent_app" : "agent_simulator"))

@@ -61,7 +61,7 @@ class ExecutionIT {
   @BeforeEach
   void clear() {
     jdbc.execute(
-        "TRUNCATE task_handling,execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
+        "TRUNCATE diagnosis_event,diagnosis_run,task_handling,execution,approval,plan,task_step,audit_event,evidence,task_creation_request,order_guard,task");
   }
 
   PlanRow plan(boolean approve, boolean expired) {

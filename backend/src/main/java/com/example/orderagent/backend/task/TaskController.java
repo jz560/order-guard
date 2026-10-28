@@ -49,6 +49,7 @@ public class TaskController {
                   "VIEW_PLAN",
                   "VIEW_EXECUTION",
                   "VIEW_HANDLING"));
+      actions.add("VIEW_DIAGNOSIS");
       if (account.role().equals("OPERATOR")
           && Set.of(State.QUEUED, State.DIAGNOSING, State.WAITING_APPROVAL, State.APPROVED)
               .contains(row.state())) actions.add("CANCEL");

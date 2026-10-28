@@ -14,11 +14,17 @@ public class TaskWorker {
   private final WorkerTransactions transactions;
   private final TestTaskStep step;
   private final WorkerSettings settings;
+  private final com.example.orderagent.backend.diagnosis.TaskDiagnosis diagnosis;
 
-  public TaskWorker(WorkerTransactions transactions, TestTaskStep step, WorkerSettings settings) {
+  public TaskWorker(
+      WorkerTransactions transactions,
+      TestTaskStep step,
+      WorkerSettings settings,
+      com.example.orderagent.backend.diagnosis.TaskDiagnosis diagnosis) {
     this.transactions = transactions;
     this.step = step;
     this.settings = settings;
+    this.diagnosis = diagnosis;
   }
 
   @Scheduled(
@@ -29,6 +35,10 @@ public class TaskWorker {
     try {
       var claim = transactions.claim(owner);
       if (claim == null) return;
+      if (diagnosis.enabled()) {
+        diagnosis.run(claim);
+        return;
+      }
       Result result;
       // 处理步骤位于认领事务之外；写回失败时保留租约，过期后由扫描恢复。
       try {

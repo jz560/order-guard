@@ -11,8 +11,8 @@
 方案响应含 `id, taskId, version, action, params, paramsHash, evidenceId, source, createdAt, expiresAt, serverTime, expired, taskState, approval, allowedActions`。
 
 - `params` 固定为 action、amountMinor（整数分）、currency（CNY）、expectedVersion、orderId、paymentId。摘要为服务端固定字段顺序 JSON 的 UTF-8 SHA-256，不要求客户端重算；提交查询响应中的摘要即可。
-- `version` 是方案版本，不是任务版本或订单版本。当前每个测试任务生成一个 version=1 方案，不提供改参数或重新生成接口。
-- `source=TEST_STUB` 明确标记固定测试方案，只引用创建任务时的订单快照，不代表真实诊断或执行前事实复核。支付、回调证据及模型诊断属于后续任务。
+- `version` 是方案版本，不是任务版本或订单版本。当前每个任务最多生成一个 version=1 方案，不提供改参数或重新生成接口。
+- `source=TEST_STUB` 明确标记固定测试方案，只引用创建任务时的订单快照，不代表真实诊断或执行前事实复核。T11 默认生成 source=AGENT_VALIDATED 的方案，引用诊断取得的订单快照，诊断日志还关联支付、回调与历史证据；实际是否使用真实模型须查看模型记录。见[诊断 API](diagnosis.md)。
 - 从冻结时开始有效 15 分钟，以 PostgreSQL 时间为准，等于到期时间即无效；`serverTime` 与 `expired` 供展示。时间为带时区绝对时间，界面应按 Asia/Hong_Kong 展示。
 - `approval` 未决定时为 null，否则包含 decision、approverId、reason、decidedAt。
 - 仅审批员、最新方案、未过期、未决定且任务为 WAITING_APPROVAL 时返回 `allowedActions=["APPROVE","REJECT"]`，其他情况为空数组。操作入口提示不是授权凭证，提交时重新检查。

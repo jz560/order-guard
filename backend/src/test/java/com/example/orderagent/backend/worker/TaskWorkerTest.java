@@ -37,7 +37,12 @@ class TaskWorkerTest {
     var claim = claim();
     when(tx.claim(anyString())).thenReturn(claim);
     when(step.run(claim)).thenThrow(new IllegalStateException("test"));
-    new TaskWorker(tx, step, settings()).tick();
+    new TaskWorker(
+            tx,
+            step,
+            settings(),
+            mock(com.example.orderagent.backend.diagnosis.TaskDiagnosis.class))
+        .tick();
     verify(tx).failed(claim);
     verify(tx, never()).complete(any(), any());
   }
@@ -51,7 +56,12 @@ class TaskWorkerTest {
     when(tx.claim(anyString())).thenReturn(claim);
     when(step.run(claim)).thenReturn(result);
     when(tx.complete(claim, result)).thenThrow(new IllegalStateException("database unavailable"));
-    new TaskWorker(tx, step, settings()).tick();
+    new TaskWorker(
+            tx,
+            step,
+            settings(),
+            mock(com.example.orderagent.backend.diagnosis.TaskDiagnosis.class))
+        .tick();
     verify(tx, never()).failed(any());
   }
 
@@ -63,7 +73,12 @@ class TaskWorkerTest {
       var settings = new WorkerSettings(env);
       assertThat(settings.enabled()).isFalse();
       var tx = mock(WorkerTransactions.class);
-      new TaskWorker(tx, mock(TestTaskStep.class), settings).tick();
+      new TaskWorker(
+              tx,
+              mock(TestTaskStep.class),
+              settings,
+              mock(com.example.orderagent.backend.diagnosis.TaskDiagnosis.class))
+          .tick();
       verifyNoInteractions(tx);
     }
     var env = new MockEnvironment().withProperty("agent.worker.enabled", "false");
