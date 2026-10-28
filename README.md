@@ -2,7 +2,7 @@
 
 面向订单运营人员的个人演示项目。第一版只处理“支付成功但订单仍待支付”。模型提出建议，审批后的 Java 服务执行并验证结果。订单、支付和回调均为模拟数据，不接入真实资金。
 
-当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**、**T05 业务模拟场景**、**T06 任务创建与查询**、**T07 后台任务推进**、**T08 方案审批**、**T09 受控执行与结果确认**、**T10 取消与人工接管**和 **T11 Agent 诊断**：两个 Spring Boot 服务、独立数据库与账号、Vue 环境状态页、只读模型对照、六种业务场景，以及带权限、订单限制、证据、审计和租约 Worker 的任务 API。Worker 默认按 T11 诊断，只有证据与规则校验通过才生成冻结方案，可通过接口批准或拒绝。批准后由 Worker 复核、执行并验证业务结果；超时及重启后查询原操作。T11 已接入真实只读查询、持久化工具循环、规则校验和诊断恢复；默认模型为无费用替身，任务前端页面尚未接入。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)、[T06](docs/tasks/T06.md)、[T07](docs/tasks/T07.md)、[T08](docs/tasks/T08.md)、[T09](docs/tasks/T09.md)、[T10](docs/tasks/T10.md)、[T11](docs/tasks/T11.md)。诊断运行与预算配置见 [诊断 API](docs/api/diagnosis.md)。取消与人工核实见 [处置接口](docs/api/handling.md)。审批及执行体验见 [方案审批](docs/api/plans.md)、[受控执行](docs/api/execution.md)。
+当前包含 **T01 工程基础**、**T02 模型接入实验**、**T03 初步价值对照实验**、**T04 幂等与真实进程恢复实验**、**T05 业务模拟场景**、**T06 任务创建与查询**、**T07 后台任务推进**、**T08 方案审批**、**T09 受控执行与结果确认**、**T10 取消与人工接管**、**T11 Agent 诊断**和 **T12 任务工作台**：两个 Spring Boot 服务、独立数据库与账号、Vue 任务列表与诊断详情、只读模型对照、六种业务场景，以及带权限、订单限制、证据、审计和租约 Worker 的任务 API。Worker 默认按 T11 诊断，只有证据与规则校验通过才生成冻结方案，可通过接口批准或拒绝。批准后由 Worker 复核、执行并验证业务结果；超时及重启后查询原操作。T11 已接入真实只读查询、持久化工具循环、规则校验和诊断恢复；默认模型为无费用替身，前端已支持登录、筛选、新建诊断、详情及证据引用定位，审批/执行交互留待 T13。验收记录见 [T01](docs/tasks/T01.md)、[T02](docs/tasks/T02.md)、[T03](docs/tasks/T03.md)、[T04](docs/tasks/T04.md)、[T05](docs/tasks/T05.md)、[T06](docs/tasks/T06.md)、[T07](docs/tasks/T07.md)、[T08](docs/tasks/T08.md)、[T09](docs/tasks/T09.md)、[T10](docs/tasks/T10.md)、[T11](docs/tasks/T11.md)、[T12](docs/tasks/T12.md)。诊断运行与预算配置见 [诊断 API](docs/api/diagnosis.md)。取消与人工核实见 [处置接口](docs/api/handling.md)。审批及执行体验见 [方案审批](docs/api/plans.md)、[受控执行](docs/api/execution.md)。
 
 ## 环境
 
@@ -45,7 +45,7 @@ npm ci
 npm run dev
 ```
 
-打开终端给出的本地地址。页面显示两个服务的实际健康状态；连接失败显示“暂不可用”。开发代理默认连接 8080 和 8081；服务端口变化时，在启动 Vite 前设置 `BACKEND_PROXY_URL`、`SIMULATOR_PROXY_URL`。这些地址仅供开发代理使用，不包含凭证。T01 前端暂不加入 Compose；`npm run preview` 仅预览静态构建，不提供开发健康代理。
+打开终端给出的本地地址。页面提供账号登录、任务列表和诊断详情；底部环境状态可检查两个服务。使用 `.env` 中配置的 operator / approver 密码，operator 可新建诊断，实际订单号从模拟场景 API 获取。创建后进入详情，刷新读取后台诊断，点击 E 编号展开证据。开发代理默认连接 8080 和 8081；服务端口变化时，在启动 Vite 前设置 `BACKEND_PROXY_URL`、`SIMULATOR_PROXY_URL`。这些地址仅供开发代理使用，不包含凭证。T01 前端暂不加入 Compose；`npm run preview` 仅预览静态构建，不提供 API/健康代理；工作台体验请用 `npm run dev`。
 
 ## 构建与检查
 
@@ -136,7 +136,7 @@ Remove-Item Env:T02_ALLOW_LIVE
 
 预置 `operator`（创建与查询）和 `approver`（查询）账号，只在 demo/test 启用。密码通过环境变量注入，默认订单权限范围为 `T05-ORDER-`。使用 HTTP Basic 建立 Spring 会话，通过 `/api/auth/csrf` 获取写请求令牌；完整 PowerShell 步骤见 [任务 API](docs/api/tasks.md)。
 
-创建任务只读调用模拟订单接口，然后在同一数据库事务中保存 `QUEUED` 任务、订单限制、初始证据、幂等键和审计。并发/重复创建返回原任务；同一账号用相同幂等键提交不同订单返回 409。查询读取持久化记录；T07 增加测试步骤后台推进，任务页面属于 T12。
+创建任务只读调用模拟订单接口，然后在同一数据库事务中保存 `QUEUED` 任务、订单限制、初始证据、幂等键和审计。并发/重复创建返回原任务；同一账号用相同幂等键提交不同订单返回 409。查询读取持久化记录；T07 增加测试步骤后台推进，任务页面已在 T12 接通，见 [T12](docs/tasks/T12.md)。
 
 ```powershell
 # 从根目录打包两个服务，再验证跨服务 HTTP、真实数据库、并发和独立进程重启
@@ -167,7 +167,7 @@ T03 比较同一批 12 个案例上的规则、单次模型和按需查询 Agent
 ```text
 backend/         任务 API、租约 Worker、权限、证据与审计、模型调用接口与替身
 simulator/       独立模拟服务、业务场景及受控修复
-frontend/        Vue + TypeScript 环境状态页
+frontend/        Vue + TypeScript 任务列表、诊断详情与登录
 infra/           数据库初始化、容器健康探针
 scripts/         统一验证入口
 docs/tasks/      任务与实测记录

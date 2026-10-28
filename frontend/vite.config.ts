@@ -5,6 +5,9 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
+      '/api': {
+        target: process.env.BACKEND_PROXY_URL ?? 'http://127.0.0.1:8080',
+      },
       '/health/backend': {
         target: process.env.BACKEND_PROXY_URL ?? 'http://127.0.0.1:8080',
         rewrite: () => '/actuator/health',

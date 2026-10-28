@@ -115,3 +115,5 @@ Invoke-RestMethod "$base/api/tasks" -Method Post -Headers $headers -WebSession $
 T10 增加按角色和状态返回的 CANCEL、TAKEOVER、RESOLVE_MANUAL，以及 VIEW_HANDLING。取消、人工接管、核实结案和不可变处置记录见[处置接口](handling.md)。
 
 T11 默认使用持久化诊断，新增 VIEW_DIAGNOSIS 和只读诊断日志接口，详见[诊断 API](diagnosis.md)。上文 T07 测试步骤仅在显式 legacy-test 模式运行。
+
+T12 已提供登录、筛选、分页、新建和详情页面，使用上述 API 与同源 Cookie/CSRF，重复创建打开返回的任务。页面启动及验证见 [T12](../tasks/T12.md)。

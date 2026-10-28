@@ -1,0 +1,236 @@
+[
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.diagnosis.DeepSeekModelGatewayTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.diagnosis.DiagnosisPolicyTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.diagnosis.ModelConfigurationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.diagnosis.ProbeLoopTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.diagnosis.TaskDiagnosisTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.evaluation.PilotEvaluationTest",
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.execution.ExecutionPolicyTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.recovery.ProbeProtocolTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.task.SimulatorOrderClientTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.backend.worker.TaskWorkerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.backend.approval.PlanApprovalIT",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.backend.diagnosis.DiagnosisIT",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.backend.execution.ExecutionIT",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.backend.FoundationIT",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "backend",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.backend.worker.WorkerLeaseIT",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.simulator.business.BusinessPolicyTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "surefire",
+    "suite": "com.example.orderagent.simulator.recovery.ProbeProtocolTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.business.BusinessSimulationIT",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.FoundationIT",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.recovery.T04RecoveryIT",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T06TaskIT",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T07WorkerIT",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T08ApprovalIT",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T09ExecutionIT",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T10HandlingIT",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "module": "simulator",
+    "kind": "failsafe",
+    "suite": "com.example.orderagent.simulator.task.T11DiagnosisIT",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]
